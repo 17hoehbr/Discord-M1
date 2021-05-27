@@ -1,5 +1,4 @@
 # Discord-M1
-![activity monitor](activity monitor.png)
 
 An ARM64 native Discord desktop app for M1 Macs
 
