@@ -31,24 +31,26 @@ document.body.addEventListener("contextmenu", e => {
     menu.firstChild.addEventListener("mouseover", e => e.target.classList.add(focusedClassName));
     menu.lastChild.addEventListener("mouseover", e => e.target.classList.add(focusedClassName));
 
-    if (e.target.tagName == "A" || e.target.tagName == "IMG") {
+    if (e.target.tagName == "A" || e.target.tagName == "IMG" || "VIDEO") {
         const items = [];
         if (e.target.tagName == "IMG") {
             menu.appendChild(createSeparator());
 
             // Copy Image
-            const copyImageItem = createMenuItem(menu, "Copy Image")
-            items.push(copyImageItem);
-            menu.appendChild(copyImageItem);
-            copyImageItem.addEventListener("click", () => {
-                copyImage(e.target.parentElement.href)
-                menu.remove();
-            });
+            if (!e.target.parentElement.href.endsWith(".gif")) {
+                const copyImageItem = createMenuItem(menu, "Copy Image")
+                items.push(copyImageItem);
+                menu.appendChild(copyImageItem);
+                copyImageItem.addEventListener("click", () => {
+                    copyImage(e.target.parentElement.href)
+                    menu.remove();
+                });
 
-            // For some reason it keeps being highlighted otherwise.
-            copyImageItem.addEventListener("mouseover", () => {
-                copyImageItem.previousSibling.previousSibling.previousSibling.classList.remove(focusedClassName);
-            });
+                // For some reason it keeps being highlighted otherwise.
+                copyImageItem.addEventListener("mouseover", () => {
+                    copyImageItem.previousSibling.previousSibling.previousSibling.classList.remove(focusedClassName);
+                });
+            }
 
             // Save Image (this just opens it in a browser for now,
             // but is here for consistency with regards to the official client)
@@ -58,6 +60,11 @@ document.body.addEventListener("contextmenu", e => {
             saveImageItem.addEventListener("click", async () => {
                 window.open(e.target.parentElement.href, "_blank");
                 menu.remove();
+            });
+
+            // For some reason it keeps being highlighted otherwise.
+            saveImageItem.addEventListener("mouseover", () => {
+                saveImageItem.previousSibling.previousSibling.previousSibling.classList.remove(focusedClassName);
             });
 
             menu.appendChild(createSeparator());
@@ -81,13 +88,16 @@ document.body.addEventListener("contextmenu", e => {
             });
         } else {
             menu.appendChild(createSeparator());
+            const link = e.target.tagName == "A"
+                ? e.target.href
+                : e.target.src;
 
             // Copy Link
             const copyLinkItem = createMenuItem(menu, "Copy Link");
             items.push(copyLinkItem);
             menu.appendChild(copyLinkItem);
             copyLinkItem.addEventListener("click", async () => {
-                await navigator.clipboard.writeText(e.target.href);
+                await navigator.clipboard.writeText(link);
                 menu.remove();
             });
 
@@ -101,7 +111,7 @@ document.body.addEventListener("contextmenu", e => {
             items.push(openLinkItem);
             menu.appendChild(openLinkItem);
             openLinkItem.addEventListener("click", async () => {
-                e.target.click();
+                window.open(link, "_blank");
                 menu.remove();
             });
         }
