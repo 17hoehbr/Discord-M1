@@ -129,7 +129,10 @@ document.body.addEventListener("contextmenu", e => {
     const reactionItem = createMenuItem(menu, "Add Reaction", reactButton.innerHTML);
     menu.insertBefore(reactionItem, menu.firstChild);
 
-    reactionItem.addEventListener("click", () => reactButton.click());
+    reactionItem.addEventListener("click", () => {
+        reactButton.click()
+        menu.remove();
+    });
     reactionItem.addEventListener("mouseover", () => {
         reactionItem.classList.add(focusedClassName);
         // For some reason it keeps being highlighted otherwise.
