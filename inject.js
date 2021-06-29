@@ -31,7 +31,7 @@ document.body.addEventListener("contextmenu", e => {
     menu.firstChild.addEventListener("mouseover", e => e.target.classList.add(focusedClassName));
     menu.lastChild.addEventListener("mouseover", e => e.target.classList.add(focusedClassName));
 
-    if (e.target.tagName == "A" || e.target.tagName == "IMG" || "VIDEO") {
+    if (e.target.tagName == "A" || e.target.tagName == "IMG" || e.target.tagName == "VIDEO") {
         const items = [];
         if (e.target.tagName == "IMG") {
             menu.appendChild(createSeparator());
