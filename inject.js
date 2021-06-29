@@ -2,9 +2,9 @@ document.body.addEventListener("contextmenu", e => {
     // If the message text is right clicked, the grandparent element will be the message element,
     // and if the message background is clicked, the parent element will be the message element.
     let isMessage = false;
-    let message = e.target;
+    let message;
     for (let i = 0; i < 6; i++) {
-        message = message.parentElement;
+        message = i == 0 ? e.target : message.parentElement;
 
         if (elementHasClassPrefix(message, "message")) {
             isMessage = true;
@@ -22,7 +22,7 @@ document.body.addEventListener("contextmenu", e => {
     }
 
     const moreButton = message.querySelector("[aria-label='More']");
-    showMenuUsingButton(e, moreButton);
+    moreButton.click();
     const menu = document.getElementById("message-actions").firstChild;
     const focusedClassName = getFocusClassNameUsingMenuItem(menu.firstChild);
 
@@ -141,6 +141,8 @@ document.body.addEventListener("contextmenu", e => {
     reactionItem.addEventListener("mouseleave", () => reactionItem.classList.remove(focusedClassName));
     reactionItem.addEventListener("focus", () => reactionItem.classList.add(focusedClassName));
     reactionItem.addEventListener("blur", () => reactionItem.classList.remove(focusedClassName));
+
+    adjustMenuPosition(e, menu.parentElement.parentElement.parentElement);
 });
 
 function copyImage(url) {
@@ -200,14 +202,16 @@ function getFocusClassNameUsingMenuItem(menuItem) {
     return focusedClassName;
 }
 
-function showMenuUsingButton(e, button) {
-    // Temporarily position the "..." button at the mouse cursor,
-    // so that the context menu pops up there. Then move it back again.
-    button.style.position = "fixed";
-    button.style.top = e.clientY + "px";
-    button.style.left = e.clientX + "px";
-    button.click();
-    button.style.position = "";
-    button.style.top = "";
-    button.style.left = "";
+function adjustMenuPosition(e, menu) {
+    const margin = 20;
+    const overflowX = e.clientX + menu.offsetWidth - document.documentElement.clientWidth;
+    const overflowY = e.clientY + menu.offsetHeight - document.documentElement.clientHeight;
+    menu.style.position = "fixed";
+    menu.style.top = overflowY <= 0
+        ? e.clientY + "px"
+        : (e.clientY - overflowY - margin) + "px";
+    menu.style.left = overflowX <= 0
+        ? e.clientX + "px"
+        : (e.clientX - menu.offsetWidth) + "px";
+    menu.style.right = "";
 }
