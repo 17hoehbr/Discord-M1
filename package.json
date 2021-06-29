@@ -35,11 +35,12 @@
     "electron": "13.0.1",
     "electron-builder": "22.11.5",
     "electron-webpack": "2.8.2",
-    "webpack": "5.37.1"
+    "webpack": "4.42.1"
   },
   "build": {
     "appId": "Discord-m1",
     "extends": null,
+    "extraResources": ["inject.js"],
     "mac": {
       "category" : "public.app-category.social-networking",
       "target": [

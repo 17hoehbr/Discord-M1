@@ -1,4 +1,5 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, shell } = require('electron');
+const fs = require('fs');
 
 // Check for updates
 const { autoUpdater } = require("electron-updater");
@@ -45,6 +46,18 @@ function createWindow() {
     win.setAutoHideMenuBar(true);
     
     win.loadURL("https://discord.com/app");
+
+    // Inject custom JavaScript
+    let injectFilePath = path.join(process.resourcesPath, 'inject.js');
+    if (!fs.existsSync(injectFilePath)) injectFilePath = './inject.js';
+    fs.readFile(injectFilePath, 'utf-8', (_, data) => {
+        win.webContents.executeJavaScript(data);
+    });
+
+    win.webContents.on('new-window', (e, url) => {
+        e.preventDefault();
+        shell.openExternal(url);
+    });
 
     // shows when ready
     win.once('ready-to-show', () => {
