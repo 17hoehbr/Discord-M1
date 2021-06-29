@@ -45,7 +45,8 @@ function createWindow() {
     // allows you to open toolbar by pressing alt
     win.setAutoHideMenuBar(true);
     
-    win.loadURL("https://discord.com/app");
+    win.loadURL("https://discord.com/app",
+    {userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'});
 
     // Inject custom JavaScript
     let injectFilePath = path.join(process.resourcesPath, 'inject.js');
