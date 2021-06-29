@@ -2,6 +2,7 @@ document.body.addEventListener("contextmenu", e => {
     // If the message text is right clicked, the grandparent element will be the message element,
     // and if the message background is clicked, the parent element will be the message element.
     let isMessage = false;
+    let isImageWrapper = false;
     let message;
     for (let i = 0; i < 6; i++) {
         message = i == 0 ? e.target : message.parentElement;
@@ -9,25 +10,28 @@ document.body.addEventListener("contextmenu", e => {
         if (elementHasClassPrefix(message, "message")) {
             isMessage = true;
             break;
+        } else if (elementHasClassPrefix(message, "modal") && e.target.tagName == "IMG") {
+            isImageWrapper = true;
+            break;
         }
     }
 
     // Only show the context menu if the message was clicked,
     // and the clicked thing doesn't have its own context menu.
-    if (!isMessage
+    if (!isMessage && !isImageWrapper
         || elementHasClassPrefix(e.target, "username")
         || elementHasClassPrefix(e.target, "repliedTextPreview")
         || elementHasClassPrefix(e.target, "avatar")) {
         return;
     }
 
-    const moreButton = message.querySelector("[aria-label='More']");
+    const moreButton = isImageWrapper
+        ? document.querySelector("[aria-label='More']")
+        : message.querySelector("[aria-label='More']");
     moreButton.click();
     const menu = document.getElementById("message-actions").firstChild;
     const focusedClassName = getFocusClassNameUsingMenuItem(menu.firstChild);
 
-    // Discord's own event is unreliable after making changes here,
-    // therefore this one is needed to make it more stable.
     menu.firstChild.addEventListener("mouseover", e => e.target.classList.add(focusedClassName));
     menu.lastChild.addEventListener("mouseover", e => e.target.classList.add(focusedClassName));
 
@@ -35,14 +39,15 @@ document.body.addEventListener("contextmenu", e => {
         const items = [];
         if (e.target.tagName == "IMG") {
             menu.appendChild(createSeparator());
+            const imageLink = e.target.src.split("?")[0];
 
             // Copy Image
-            if (!e.target.parentElement.href.endsWith(".gif")) {
+            if (!imageLink.endsWith(".gif")) {
                 const copyImageItem = createMenuItem(menu, "Copy Image")
                 items.push(copyImageItem);
                 menu.appendChild(copyImageItem);
                 copyImageItem.addEventListener("click", () => {
-                    copyImage(e.target.parentElement.href)
+                    copyImage(imageLink)
                     menu.remove();
                 });
 
@@ -58,7 +63,7 @@ document.body.addEventListener("contextmenu", e => {
             items.push(saveImageItem);
             menu.appendChild(saveImageItem);
             saveImageItem.addEventListener("click", async () => {
-                window.open(e.target.parentElement.href, "_blank");
+                window.open(imageLink, "_blank");
                 menu.remove();
             });
 
@@ -74,7 +79,7 @@ document.body.addEventListener("contextmenu", e => {
             items.push(copyLinkItem);
             menu.appendChild(copyLinkItem);
             copyLinkItem.addEventListener("click", async () => {
-                await navigator.clipboard.writeText(e.target.parentElement.href);
+                await navigator.clipboard.writeText(imageLink);
                 menu.remove();
             });
 
@@ -83,7 +88,7 @@ document.body.addEventListener("contextmenu", e => {
             items.push(openLinkItem);
             menu.appendChild(openLinkItem);
             openLinkItem.addEventListener("click", async () => {
-                window.open(e.target.parentElement.href, "_blank");
+                window.open(imageLink, "_blank");
                 menu.remove();
             });
         } else {
@@ -124,23 +129,35 @@ document.body.addEventListener("contextmenu", e => {
         }
     }
 
-    // Add "add reaction" item to context menu
-    const reactButton = message.querySelector("[aria-label='Add Reaction']");
-    const reactionItem = createMenuItem(menu, "Add Reaction", reactButton.innerHTML);
-    menu.insertBefore(reactionItem, menu.firstChild);
+    if (isImageWrapper) {
+        for (const item of Array.from(menu.children)) {
+            if (!item.classList.contains("custom")) {
+                item.remove();
+            }
+        }
 
-    reactionItem.addEventListener("click", () => {
-        reactButton.click()
-        menu.remove();
-    });
-    reactionItem.addEventListener("mouseover", () => {
-        reactionItem.classList.add(focusedClassName);
-        // For some reason it keeps being highlighted otherwise.
-        reactionItem.nextSibling.classList.remove(focusedClassName);
-    });
-    reactionItem.addEventListener("mouseleave", () => reactionItem.classList.remove(focusedClassName));
-    reactionItem.addEventListener("focus", () => reactionItem.classList.add(focusedClassName));
-    reactionItem.addEventListener("blur", () => reactionItem.classList.remove(focusedClassName));
+        if (menu.firstChild.getAttribute("role") == "separator") {
+            menu.firstChild.remove();
+        }
+    } else {
+        // Add "add reaction" item to context menu
+        const reactButton = message.querySelector("[aria-label='Add Reaction']");
+        const reactionItem = createMenuItem(menu, "Add Reaction", reactButton.innerHTML);
+        menu.insertBefore(reactionItem, menu.firstChild);
+
+        reactionItem.addEventListener("click", () => {
+            reactButton.click()
+            menu.remove();
+        });
+        reactionItem.addEventListener("mouseover", () => {
+            reactionItem.classList.add(focusedClassName);
+            // For some reason it keeps being highlighted otherwise.
+            reactionItem.nextSibling.classList.remove(focusedClassName);
+        });
+        reactionItem.addEventListener("mouseleave", () => reactionItem.classList.remove(focusedClassName));
+        reactionItem.addEventListener("focus", () => reactionItem.classList.add(focusedClassName));
+        reactionItem.addEventListener("blur", () => reactionItem.classList.remove(focusedClassName));
+    }
 
     adjustMenuPosition(e, menu.parentElement.parentElement.parentElement);
 });
@@ -169,6 +186,7 @@ function copyImage(url) {
 function createMenuItem(referenceMenu, title, icon) {
     const item = referenceMenu.firstChild.cloneNode(true);
     item.id = "";
+    item.classList.add("custom");
     item.children[0].innerHTML = title;
     if (icon) item.children[1].innerHTML = icon;
     else item.children[1].remove();
@@ -179,6 +197,7 @@ function createMenuItem(referenceMenu, title, icon) {
 function createSeparator() {
     const separator = document.createElement("div");
     separator.setAttribute("role", "separator");
+    separator.classList.add("custom");
     separator.style.boxSizing = "border-box";
     separator.style.margin = "4px";
     separator.style.borderBottom = "1px solid var(--background-modifier-accent)";
