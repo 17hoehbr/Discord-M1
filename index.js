@@ -1,6 +1,10 @@
 const { app, BrowserWindow, shell } = require('electron');
 const fs = require('fs');
 
+// https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
+let win;
+let willQuitApp;
+
 // Check for updates
 const { autoUpdater } = require("electron-updater");
 app.on('ready', function () {
@@ -17,7 +21,7 @@ function createWindow() {
     });
     // Create the browser window.
     const path = require('path');
-    const win = new BrowserWindow({
+    win = new BrowserWindow({
         icon: path.join(__dirname, 'icon.icns'),
         'x': mainWindowState.x,
         'y': mainWindowState.y,
@@ -64,8 +68,29 @@ function createWindow() {
     win.once('ready-to-show', () => {
         win.show()
     })
+
+    // Mirror behaviour of real app by only hiding the window
+    win.on('close', (e) => {
+        if (willQuitApp) {
+            /* the user tried to quit the app */
+            win = null;
+        } else {
+            /* the user only tried to close the window */
+            e.preventDefault();
+            win.hide();
+        }
+    });
 }
 
 app.whenReady().then(() => {
-  createWindow()
+    createWindow()
 })
+
+// Show the window again once user clicks on dock icon
+app.on('activate', () => {
+    win.show();
+});
+
+/* 'before-quit' is emitted when Electron receives 
+ * the signal to exit and wants to start closing windows */
+app.on('before-quit', () => willQuitApp = true);
