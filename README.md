@@ -1,3 +1,7 @@
+# DISCONTINUED
+
+Discord Canary now includes official ARM support, please use that instead as this repo will no longer be maintained.
+
 # Discord-M1
 
 An ARM64 native Discord desktop app for M1 Macs
